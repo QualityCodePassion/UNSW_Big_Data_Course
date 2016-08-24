@@ -2,7 +2,7 @@ package comp9313.ass1;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -109,21 +109,21 @@ public class Ass1WithoutCombiner {
 
 	
 	
-	public static class WordReducer extends Reducer<Text, IntPair, Text, FloatWritable> {
+	public static class WordReducer extends Reducer<Text, IntPair, Text, DoubleWritable> {
 		
-		private FloatWritable result = new FloatWritable();
+		private DoubleWritable result = new DoubleWritable();
 
 		public void reduce(Text key, Iterable<IntPair> values, Context context)
 				throws IOException, InterruptedException {
 			
-			float sum = 0;
-			float word_count = 0;
+			double sum = 0;
+			double word_count = 0;
 			for (IntPair val : values) {
 				sum += val.getFirst();
 				word_count += val.getSecond();
 			}
 			
-			float avg = sum / word_count;
+			double avg = sum / word_count;
 			
 			result.set(avg);
 			context.write(key, result);

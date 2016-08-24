@@ -2,7 +2,7 @@ package comp9313.ass1;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -13,7 +13,6 @@ import java.util.StringTokenizer;
 
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.Reducer.Context;
 import org.apache.htrace.commons.logging.Log;
 import org.apache.htrace.commons.logging.LogFactory;
 
@@ -31,46 +30,46 @@ public class Ass1Combiner {
 	 * @author From comp9313 lecture 4 notes
 	 *
 	 */
-	public static class FloatPair implements Writable {
+	public static class DoublePair implements Writable {
 
-	    private float first, second;
+	    private double first, second;
 
 
-	    public FloatPair() {
+	    public DoublePair() {
 
 	    }
 
-	    public FloatPair(float first, float second) {
+	    public DoublePair(double first, double second) {
 	               set(first, second);
 	    }
 
 
-	    public void set(float left, float right) {
+	    public void set(double left, double right) {
 	               first = left;
 	               second = right;
 	    }
 
 
-	    public float getFirst() {
+	    public double getFirst() {
 	               return first;
 	    }
 
-	    public float getSecond() {
+	    public double getSecond() {
 	               return second;
 	    }
 
 
 		@Override
 	   public void write(DataOutput out) throws IOException {
-	               out.writeFloat(first);
-	               out.writeFloat(second);    
+	               out.writeDouble(first);
+	               out.writeDouble(second);    
 	    }
 
 	    
 		@Override
 	   public void readFields(DataInput in) throws IOException {
-	               first = in.readFloat();
-	               second = in.readFloat();
+	               first = in.readDouble();
+	               second = in.readDouble();
 
 	    }
 	}
@@ -80,9 +79,9 @@ public class Ass1Combiner {
 	
 	
 	
-	public static class WordMapper extends Mapper<Object, Text, Text, FloatPair> {
+	public static class WordMapper extends Mapper<Object, Text, Text, DoublePair> {
 
-		//private final static FloatPair one = new FloatPair(1,2);
+		//private final static DoublePair one = new DoublePair(1,2);
 		//private final static IntWritable one = new IntWritable(1);
 
 		private Text word = new Text();
@@ -97,7 +96,7 @@ public class Ass1Combiner {
 				
 				if (Character.isLetter(c.charAt(0))){
 					word.set(c);
-					FloatPair nextValue = new FloatPair(w.length(), 1);
+					DoublePair nextValue = new DoublePair(w.length(), 1);
 					context.write(word, nextValue );
 				}
 				System.out.println(word.toString());
@@ -109,21 +108,21 @@ public class Ass1Combiner {
 	}
 
 	
-	public static class WordReducer extends Reducer<Text, FloatPair, Text, FloatWritable> {
+	public static class WordReducer extends Reducer<Text, DoublePair, Text, DoubleWritable> {
 		
-		private FloatWritable result = new FloatWritable();
+		private DoubleWritable result = new DoubleWritable();
 
-		public void reduce(Text key, Iterable<FloatPair> values, Context context)
+		public void reduce(Text key, Iterable<DoublePair> values, Context context)
 				throws IOException, InterruptedException {
 			
-			float sum = 0;
-			float word_count = 0;
-			for (FloatPair val : values) {
+			double sum = 0;
+			double word_count = 0;
+			for (DoublePair val : values) {
 				sum += val.getFirst();
 				word_count += val.getSecond();
 			}
 			
-			float avg = sum / word_count;
+			double avg = sum / word_count;
 			
 			result.set(avg);
 			context.write(key, result);
@@ -137,21 +136,21 @@ public class Ass1Combiner {
 
 	
 	
-	public static class WordCombiner extends Reducer<Text, FloatPair, Text, FloatPair> {
+	public static class WordCombiner extends Reducer<Text, DoublePair, Text, DoublePair> {
 		
-		private FloatPair result = new FloatPair();
+		private DoublePair result = new DoublePair();
 
-		public void reduce(Text key, Iterable<FloatPair> values, Context context)
+		public void reduce(Text key, Iterable<DoublePair> values, Context context)
 				throws IOException, InterruptedException {
 			
-			float sum = 0;
-			float word_count = 0;
-			for (FloatPair val : values) {
+			double sum = 0;
+			double word_count = 0;
+			for (DoublePair val : values) {
 				sum += val.getFirst();
 				word_count += val.getSecond();
 			}
 			
-			//float avg = sum / word_count;
+			//double avg = sum / word_count;
 			
 			result.set(sum, word_count);
 			context.write(key, result);
@@ -175,7 +174,7 @@ public class Ass1Combiner {
 //		    job.setCombinerClass(Ass1WithoutCombiner.WordReducer.class);
 //		    job.setReducerClass(Ass1WithoutCombiner.WordReducer.class);
 		    job.setOutputKeyClass(Text.class);
-		    job.setOutputValueClass(FloatPair.class);
+		    job.setOutputValueClass(DoublePair.class);
 		    FileInputFormat.addInputPath(job, new Path(args[0]));
 		    FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		    System.exit(job.waitForCompletion(true) ? 0 : 1);
