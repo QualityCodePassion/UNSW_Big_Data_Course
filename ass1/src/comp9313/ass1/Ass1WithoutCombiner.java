@@ -4,10 +4,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
@@ -16,73 +19,76 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.htrace.commons.logging.Log;
 import org.apache.htrace.commons.logging.LogFactory;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import org.apache.hadoop.io.Writable;
 
 
+/**
+ * This is for assignment 1 of COMP9313 and is the version that doesn't
+ * use a combiner.
+ * 
+ * Note that the assignment request that only one file could be used
+ * by each version, but I would personally prefer to put each class in its
+ * own file to make it cleaner.
+ * 
+ * @author Tim Hale, based on the examples provided in the labs
+ * @version 1.1
+ */
 
 
 
 public class Ass1WithoutCombiner {
 	
 	/**
-	 * @author From comp9313 lecture 4 notes
+	 * @author Tim Hale based on the "IntPair" class in comp9313 lecture 4 notes
 	 *
 	 */
-	public static class IntPair implements Writable {
+	public static class DoublePair implements Writable {
 
-	    private int first, second;
+	    private double first, second;
 
 
-	    public IntPair() {
+	    public DoublePair() {
 
 	    }
 
-	    public IntPair(int first, int second) {
+	    public DoublePair(double first, double second) {
 	               set(first, second);
 	    }
 
 
-	    public void set(int left, int right) {
+	    public void set(double left, double right) {
 	               first = left;
 	               second = right;
 	    }
 
 
-	    public int getFirst() {
+	    public double getFirst() {
 	               return first;
 	    }
 
-	    public int getSecond() {
+	    public double getSecond() {
 	               return second;
 	    }
 
 
 		@Override
 	   public void write(DataOutput out) throws IOException {
-	               out.writeInt(first);
-	               out.writeInt(second);    
+	               out.writeDouble(first);
+	               out.writeDouble(second);    
 	    }
-
 	    
 		@Override
 	   public void readFields(DataInput in) throws IOException {
-	               first = in.readInt();
-	               second = in.readInt();
+	               first = in.readDouble();
+	               second = in.readDouble();
 
 	    }
 	}
-
 	
 	
 	
 	
 	
-	public static class WordMapper extends Mapper<Object, Text, Text, IntPair> {
-
-		//private final static IntPair one = new IntPair(1,2);
-		//private final static IntWritable one = new IntWritable(1);
+	public static class WordMapper extends Mapper<Object, Text, Text, DoublePair> {
 
 		private Text word = new Text();
 
@@ -96,7 +102,7 @@ public class Ass1WithoutCombiner {
 				
 				if (Character.isLetter(c.charAt(0))){
 					word.set(c);
-					IntPair nextValue = new IntPair(w.length(), 1);
+					DoublePair nextValue = new DoublePair(w.length(), 1);
 					context.write(word, nextValue );
 				}
 				System.out.println(word.toString());
@@ -109,16 +115,16 @@ public class Ass1WithoutCombiner {
 
 	
 	
-	public static class WordReducer extends Reducer<Text, IntPair, Text, DoubleWritable> {
+	public static class WordReducer extends Reducer<Text, DoublePair, Text, DoubleWritable> {
 		
 		private DoubleWritable result = new DoubleWritable();
 
-		public void reduce(Text key, Iterable<IntPair> values, Context context)
+		public void reduce(Text key, Iterable<DoublePair> values, Context context)
 				throws IOException, InterruptedException {
 			
 			double sum = 0;
 			double word_count = 0;
-			for (IntPair val : values) {
+			for (DoublePair val : values) {
 				sum += val.getFirst();
 				word_count += val.getSecond();
 			}
@@ -144,7 +150,7 @@ public class Ass1WithoutCombiner {
 		    job.setMapperClass(WordMapper.class);
 		    job.setReducerClass(WordReducer.class);
 		    job.setOutputKeyClass(Text.class);
-		    job.setOutputValueClass(IntPair.class);
+		    job.setOutputValueClass(DoublePair.class);
 		    FileInputFormat.addInputPath(job, new Path(args[0]));
 		    FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		    System.exit(job.waitForCompletion(true) ? 0 : 1);
