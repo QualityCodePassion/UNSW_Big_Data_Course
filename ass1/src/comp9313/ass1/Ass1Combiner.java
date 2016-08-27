@@ -31,6 +31,10 @@ import org.apache.htrace.commons.logging.LogFactory;
 
 public class Ass1Combiner {
 	
+	/** The "Combiner" class to be used by the MapReduce that accepts the first letter
+	 * of each token as the key and aggregates the total word length and word count
+	 */
+	
 	public static class WordCombiner extends Reducer<
 		Text, Ass1WithoutCombiner.DoublePair, Text, Ass1WithoutCombiner.DoublePair> {
 		

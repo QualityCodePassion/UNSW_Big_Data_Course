@@ -37,7 +37,9 @@ import org.apache.htrace.commons.logging.LogFactory;
 
 public class Ass1WithoutCombiner {
 	
-	/**
+	/** A pair of "Writable" objects of type double to be used by the MapReduce
+	 *  objects
+	 *  
 	 * @author Tim Hale based on the "IntPair" class in comp9313 lecture 4 notes
 	 *
 	 */
@@ -87,6 +89,9 @@ public class Ass1WithoutCombiner {
 	
 	
 	
+	/** The "Mapper" class to be used by the MapReduce that uses the first letter
+	 * of each token as the key and the length of the token and a count as the value
+	 */
 	
 	public static class WordMapper extends Mapper<Object, Text, Text, DoublePair> {
 
@@ -94,26 +99,33 @@ public class Ass1WithoutCombiner {
 
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 			
-			StringTokenizer itr = new StringTokenizer(value.toString());
+	    	StringTokenizer itr = new StringTokenizer(value.toString().toLowerCase(),
+	    			" *$&#/\t\n\f\"'\\,.:;?![](){}<>~-_");
+
 			
 			while (itr.hasMoreTokens()) {
 				String w = itr.nextToken().toLowerCase();
-				String c = String.valueOf(w.charAt(0));
+				char c = w.charAt(0);
 				
-				if (Character.isLetter(c.charAt(0))){
-					word.set(c);
+				if( (c >= 'a') && (c <= 'z') )
+				{
+					word.set( String.valueOf(c) );
 					DoublePair nextValue = new DoublePair(w.length(), 1);
 					context.write(word, nextValue );
+
+					System.out.println(word.toString());
+					Log log = LogFactory.getLog(WordMapper.class);
+					log.info("Mylog@Mapper: " + word.toString());
 				}
-				System.out.println(word.toString());
-				
-				Log log = LogFactory.getLog(WordMapper.class);
-				log.info("Mylog@Mapper: " + word.toString());
 			}
 		}
 	}
 
 	
+	/** The "Reducer" class to be used by the MapReduce that accepts the first letter
+	 * of each token as the key and outputs the average word length of all words staring
+	 * with that value as the output
+	 */
 	
 	public static class WordReducer extends Reducer<Text, DoublePair, Text, DoubleWritable> {
 		
