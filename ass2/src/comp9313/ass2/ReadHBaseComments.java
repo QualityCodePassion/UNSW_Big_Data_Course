@@ -36,7 +36,7 @@ import org.apache.hadoop.util.ToolRunner;
  * HBase table.
  */
 
-public class HBaseBulkLoadExample extends Configured implements Tool {
+public class ReadHBaseComments extends Configured implements Tool {
 
 	//Only the mapper is required, HBase will implement the reducer
 	static class HBaseVoteMapper extends Mapper<LongWritable, Text, ImmutableBytesWritable, Put> {
@@ -135,7 +135,7 @@ public class HBaseBulkLoadExample extends Configured implements Tool {
 	public static void main(String[] args) throws Exception {
 		
 		createTable("votes", new String[]{"postInfo", "voteInfo"});
-		int exitCode = ToolRunner.run(HBaseConfiguration.create(), new HBaseBulkLoadExample(), args);
+		int exitCode = ToolRunner.run(HBaseConfiguration.create(), new ReadHBaseComments(), args);
 		System.exit(exitCode);
 	}
 }
