@@ -43,7 +43,7 @@ import org.w3c.dom.Element;
  * HBase table.
  */
 
-public class ReadHBaseComments extends Configured implements Tool {
+public class HBaseBulkLoadComments extends Configured implements Tool {
 	
 	
 	public static class Comment {
@@ -254,7 +254,7 @@ public class ReadHBaseComments extends Configured implements Tool {
 	public static void main(String[] args) throws Exception {
 		
 		createTable("comments", new String[]{"postInfo", "commentInfo", "userInfo"});
-		int exitCode = ToolRunner.run(HBaseConfiguration.create(), new ReadHBaseComments(), args);
+		int exitCode = ToolRunner.run(HBaseConfiguration.create(), new HBaseBulkLoadComments(), args);
 		System.exit(exitCode);
 	}
 }
