@@ -58,62 +58,30 @@ public class ReadHBaseComments {
 			userId.set(userIdStr);
 			String commentStr = new String(value.getValue(CF2, CF2ATTR2));
 			comment.set(commentStr);
-			context.write(userId, comment);
+			
+			context.write(userId, userId);	// Bit of a hack, but sending the userId as the value so it can be counted
+			//context.write(userId, comment);
 		}
 	}
 
 	public static class AggregateReducer extends TableReducer<Text, Text, Text> {
-	//public static class AggregateReducer extends Reducer<Text, Text, Text, Text> {
 
-		@SuppressWarnings("deprecation")
 		public void reduce(Text key, Iterable<Text> values, Context context)
 				throws IOException, InterruptedException {
 			
-			//HashMap<String, Integer> userIdMap = new HashMap<String, Integer>();
-			String usrId = key.toString(); //val.toString();
+			String usrId = key.toString();
 			Integer count = 0;
 			
 			for (Text val : values) {
-				
-				System.out.println("User ID = " + usrId + ", comment = " + val.toString());
+				//System.out.println("User ID = " + usrId + ", comment = " + val.toString());
 				count++;
-				
-				/*
-				if (userIdMap.containsKey(usrId)) {
-					Integer count = (Integer) userIdMap.get(usrId);					
-					userIdMap.put(usrId, count+1);
-				} 
-				else {
-					userIdMap.put(usrId, new Integer(1));
-				}
-				*/
 			}
 			
 			System.out.println("User ID = " + usrId + ", count = " + count.toString() );
-			//context.write(key, new Text(count.toString() );
-			
 			
 		    Put put = new Put(Bytes.toBytes(key.toString()));
-		    // TODO "add" is depreciated, so find out the new way of doing this!
-		    put.add("stats".getBytes(), "count".getBytes(), Bytes.toBytes(count));
-
-		    // TODO use "createTable()" method create the table in main function!!
+		    put.addColumn("stats".getBytes(), "count".getBytes(), Bytes.toBytes(count));
 		    context.write(null, put);
-		    
-			
-			/*
-			StringBuilder sb = new StringBuilder();
-			Set<Entry<String, Integer> > sets = userIdMap.entrySet();
-			for(Entry<String, Integer> entry: sets){
-				sb.append(entry.getKey() + ":" + entry.getValue() + "\t");
-			}
-			
-			System.out.println(sb.toString());
-				
-			//context.write(key, new Text(sb.toString().trim()));
-
-			
-			*/
 		}
 	}
 
