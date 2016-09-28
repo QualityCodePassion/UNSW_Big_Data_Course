@@ -37,10 +37,13 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
- * This file was provided in Lab6.
+ * This file is based on the one provided in Lab6.
  * Uses HBase's bulk load facility ({@link HFileOutputFormat2} and
  * {@link LoadIncrementalHFiles}) to efficiently load data into a
  * HBase table.
+ * 
+ * @author Tim Hale, based on the HBaseBulkLoadExample.java  example provided in the lab 6
+ * @version 1.0
  */
 
 public class HBaseBulkLoadComments extends Configured implements Tool {
@@ -126,11 +129,7 @@ public class HBaseBulkLoadComments extends Configured implements Tool {
 				setCommentScore(ele.getAttribute("Score"));
 				setCommentText(ele.getAttribute("Text"));
 				
-				//if(Score.equals("5")){
 				setUserId(ele.getAttribute("UserId"));
-				//} else {
-				//	setUserId(null);
-				//}
 				setCreationDate(ele.getAttribute("CreationDate"));
 				
 			} catch (Exception e) {
@@ -188,8 +187,24 @@ public class HBaseBulkLoadComments extends Configured implements Tool {
 		Job job = Job.getInstance(conf, "hbase bulk load");
 
 		job.setJarByClass(getClass());
-		FileInputFormat.addInputPath(job, new Path(args[0]));
-		Path outputPath = new Path(args[1]);
+		
+		Path outputPath = null;
+		
+		// This is a work around because when I run it with the command that was requested in the
+		// assignmnent 2 spec, which is:
+		// $HADOOP_HOME/bin/hadoop jar YOURJAR.jar YOURCLASS input output
+		// The "YOURCLASS" is treated as an input arg
+		if( args.length == 3)
+		{
+			FileInputFormat.addInputPath(job, new Path(args[1]));
+			outputPath = new Path(args[2]);
+		}
+		else
+		{
+			FileInputFormat.addInputPath(job, new Path(args[0]));
+			outputPath = new Path(args[1]);
+		}
+
 		FileOutputFormat.setOutputPath(job, outputPath);
 		job.setMapperClass(HBaseCommentMapper.class);
 		job.setMapOutputKeyClass(ImmutableBytesWritable.class);
