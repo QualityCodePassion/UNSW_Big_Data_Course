@@ -35,10 +35,10 @@ object Ass3 {
 
   
   
-    /** Code for Q1 
-     *  input - VoteTypeId (key) and PostId
-     *  returns - the VoteTypeId that is associated with the fewest posts and the list of posts. 
-     *  */
+  /** Code for Q1 
+  *  input - VoteTypeId (key) and PostId
+  *  returns - the VoteTypeId that is associated with the fewest posts and the list of posts. 
+  */
   def Question1(voteTuple: RDD[(Int,String)]) : (String, Iterable[String]) = {
     
     // Count how many post are ascociated with each VoteTypeId and construct a list of all the post
@@ -61,7 +61,10 @@ object Ass3 {
     (minVoteTypeId, listOfPostId)
   }
 
-  
+  /** Code for Q2
+  *  input - PostId (key) and VoteTypeId
+  *  returns - TBA
+  */
   def Question2(voteTuple: RDD[(Int,Int)]) : List[Int] = {
 	  //write your code
    
