@@ -8,14 +8,13 @@ import org.apache.spark.rdd._
 object Problem2 {
   
   /** Code for Problem 2:
-   *   Prints "the average length of words starting with each letter. This
-   *   means that for every letter, you need to compute: the total length 
-   *   of all words that start with that letter divided by the total number 
-   *   of words that start with that letter"
-   *   
-   *  input - RDD(String) of the words
-   */
-  def CalcAvgWordLength(voteTuple: RDD[(String)]) = {
+  *  input - RDD(String) of the words
+  *  returns - "the average length of words starting with each letter. This
+  *  means that for every letter, you need to compute: the total length 
+  *  of all words that start with that letter divided by the total number 
+  *  of words that start with that letter"
+  */
+  def CalcAvgWordLength(voteTuple: RDD[(String)]) : RDD[(Char,Double)] = {
     // Step 1: Get the first letter of each word and make it the key
     // (convert to lower case and filter out non-alpha chars)
     val filteredWords = voteTuple.filter( x => x.isEmpty() != true )
@@ -29,10 +28,13 @@ object Problem2 {
     // Step 3: Calculate the ave and print out the key value pairs
     val avg = totals.map( x => (x._1, x._2._1/x._2._2 ) ).sortByKey(true)
     
+    // Print the resullts to the console
     for(temp<-avg)
     {
-      println(temp._1 + "	" + temp._2)
+      println(temp._1 + "\t" + temp._2)
     }
+    
+    return avg
   }
 
 
@@ -40,6 +42,7 @@ object Problem2 {
   
   def main(args: Array[String]) {
     val inputFile = args(0)    
+    val outputFile = args(1)
     val conf = new SparkConf().setAppName("Problem2").setMaster("local")
     val sc = new SparkContext(conf)
 
@@ -47,6 +50,10 @@ object Problem2 {
     val textFile = sc.textFile(inputFile)
     val words = textFile.flatMap(line => line.split("[\\s*$&#/\"'\\,.:;?!\\[\\](){}<>~\\-_]+"))
     
-    CalcAvgWordLength(words)
+    val output = CalcAvgWordLength(words)
+    
+    // Convert to string and write to the output file
+    output.map(x => x._1 + "\t" + x._2).saveAsTextFile(outputFile)
+    println("Output written to file in: " + outputFile )
   }
 }

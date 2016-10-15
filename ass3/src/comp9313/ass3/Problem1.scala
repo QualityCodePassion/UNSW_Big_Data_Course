@@ -13,36 +13,17 @@ object Ass3 {
   val UserId = 3
   val CreationTime = 4
 
-  /** A function that splits a line of input into (voteTypeId, postId) tuples. */
-  def q1parseLine(line: String) = {
-    val fields = line.split(",")
-    val voteTypeId = fields(VoteTypeId).toInt
-    val postId = fields(PostId)
-    // Create a tuple that is our result.
-    (voteTypeId, postId)
-  }
-
-  
-  
-  /** A function that splits a line of input into (postId, voteTypeId) tuples. */
-  def q2parseLine(line: String) = {
-    val fields = line.split(",")
-    val voteTypeId = fields(VoteTypeId).toInt
-    val postId = fields(PostId).toInt
-    // Create a tuple that is our result.
-    (postId, voteTypeId)
-  }
-
-  
   
   /** Code for Q1 
-  *  input - VoteTypeId (key) and PostId
+  *  input - RDD Array of strings of the input text
   *  returns - the VoteTypeId that is associated with the fewest posts and the list of posts. 
   */
-  def Question1(voteTuple: RDD[(Int,String)]) : (String, Iterable[String]) = {
+  def Question1(textFile: RDD[Array[String]]) : (String, Iterable[String]) = {
     
+    // convert the array of strings into an RDD tuple of VoteTypeId (key) and PostId
+    val convertToTuple = textFile.map( x => (x(VoteTypeId).toInt, x(PostId) ) )
     // Count how many post are ascociated with each VoteTypeId and construct a list of all the post
-    val totalsByVoteTypeId = voteTuple.mapValues(x => (x, 1)).reduceByKey( (x,y) => (x._1 + "," + y._1 , x._2 + y._2))
+    val totalsByVoteTypeId = convertToTuple.mapValues(x => (x, 1)).reduceByKey( (x,y) => (x._1 + "," + y._1 , x._2 + y._2))
     
     // Based on http://stackoverflow.com/questions/26886275/how-to-find-max-value-in-pair-rdd
     // Obtain the VoteTypeId with the min count
@@ -51,10 +32,6 @@ object Ass3 {
       Ordering[(Int)].compare(x._2._2, y._2._2)
       })
     
-    // Obtain, then Sort and print the final results.
-    //val results = totalsByVoteTypeId.collect()
-    //results.sorted.foreach(println)
-    
     val minVoteTypeId = minValue._1.toString()
     var listOfPostId : Iterable[String] = minValue._2._1.split(",")
     
@@ -62,78 +39,28 @@ object Ass3 {
   }
 
   /** Code for Q2
-  *  input - PostId (key) and VoteTypeId
-  *  returns - TBA
+  *  input - RDD Array of strings of the input text
+  *  returns - Find the Ids of all posts that are favoured by more than
+  *  five users. Your output should only contain PostIds, sorted in descending
+  *  order according to their NUMERIC values.
   */
-  def Question2(voteTuple: RDD[(Int,Int)]) : List[Int] = {
-	  //write your code
-   
+  def Question2(textFile: RDD[Array[String]]): List[Int] = {
+  
+    // Convert into an RDD tuple of PostId (key) and VoteTypeId
+    val convertToTuple = textFile.map( x => (x(PostId).toInt, x(VoteTypeId).toInt ) )
     // Filter out only the favourite votes
-    val favVotes =  voteTuple.filter(x => x._2 == 5)
-    
+    val favVotes =  convertToTuple.filter(x => x._2 == 5)
     // Count how many post are ascociated with each VoteTypeId and construct a list of all the post
     val totalsByVoteTypeId = favVotes.mapValues(x => (x, 1)).reduceByKey( (x,y) => (x._1, x._2 + y._2))
     // Filter out the ones that don't have a count value > 5
     val greaterThanFive = totalsByVoteTypeId.filter( x => x._2._2 > 5)
-    // Sord in descending order
+    // Sort in descending order
     val sortedResults = greaterThanFive.sortByKey(false)  //takeOrdered(0)(Ordering[Int].reverse.on(_))
     
-    // Print out the result in the " List" format requested
-    val firstCol = sortedResults.map( x => (x._1) )
-    var isFirstVal = true
-    //firstCol.foreach(println )
-    for(temp<-firstCol)
-    {
-      if( isFirstVal)
-      {
-        isFirstVal = false
-        print("List(")
-      }
-      else
-      {
-        isFirstVal = false
-        print(", ")
-      }
-      
-      print(temp)
-    }
-    print( ")" )
-
-
-    var buf = scala.collection.mutable.ListBuffer[Int]()
-
-    /* TODO Will try an convert the RDD to a list if I get time
+    // Sort the resulting PostIds in descending order and convert it into a list of Ints as specified
+    val firstCol : List[Int] = sortedResults.map( x => (x._1) ).collect().toList
     
-    // Obtain, then Sort and print the final results.
-    //val buf = scala.collection.mutable.ListBuffer.empty[Int]
-
-    for(temp<-firstCol)
-    {
-      println(temp.toInt)
-      buf += temp.toInt //1 Not even having a constant works!
-      println(buf)
-    }
-    
-    // For some reason "buf" gets cleared!!!!
-    println(buf)
-
-
-    
-    //var outList = scala.collection.mutable.Buffer[Int]()
-    //for(str<-firstCol) outList += str
-    val strArray = Array(1,2,3)
-    var outList = scala.collection.mutable.ListBuffer[Int]()
-    
-    for(str<-strArray) // As soon as I change the "strArray" to the firstCol, it prints, but outList is empty?
-    {
-      outList += 1  //str.toInt
-      println(str)
-    }
-    
-    println(outList.toList)
-    */
-    
-    return buf.toList  // This would work if buf wasn't empty!!
+    return firstCol
   }
 
 
@@ -143,19 +70,10 @@ object Ass3 {
     val conf = new SparkConf().setAppName("Ass3").setMaster("local")
     val sc = new SparkContext(conf)
 
-    //val textFile = sc.textFile(inputFile).map(_.split(","))
-    val textFile = sc.textFile(inputFile)
-    // Use our q1parseLines function to convert to (voteTypeId, postId) tuples
-    val q1VoteTuple = textFile.map(q1parseLine)
-    
-    val votetype = Question1(q1VoteTuple)
+    val textFile = sc.textFile(inputFile).map(_.split(","))
+    val votetype = Question1(textFile)
     println(votetype)
-    
-
-    
-    // Use our q2parseLines function to convert to (voteTypeId, postId) tuples
-    val q2VoteTuple = textFile.map(q2parseLine)
-    val posts = Question2(q2VoteTuple)
-    //println(posts)
+    val posts = Question2(textFile)
+    println(posts)
   }
 }
