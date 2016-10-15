@@ -55,7 +55,7 @@ object Ass3 {
     // Filter out the ones that don't have a count value > 5
     val greaterThanFive = totalsByVoteTypeId.filter( x => x._2._2 > 5)
     // Sort in descending order
-    val sortedResults = greaterThanFive.sortByKey(false)  //takeOrdered(0)(Ordering[Int].reverse.on(_))
+    val sortedResults = greaterThanFive.sortByKey(false)
     
     // Sort the resulting PostIds in descending order and convert it into a list of Ints as specified
     val firstCol : List[Int] = sortedResults.map( x => (x._1) ).collect().toList

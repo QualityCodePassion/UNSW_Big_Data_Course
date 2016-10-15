@@ -23,7 +23,7 @@ object Problem2 {
     // Step 2: Calculate:
     // wordLengthForKey = "total length of all words that start with that letter"
     // wordCountForKey = "total number of words that start with that letter"
-    val totals = mapByFirstLetter.reduceByKey( (x,y) => (x._1 + y._1 , x._2 + y._2) ) //( (x,y) => x )  //( (x,y) => (x._1, x._2 + y._2, x._3 + y._3 ) ) //        //  
+    val totals = mapByFirstLetter.reduceByKey( (x,y) => (x._1 + y._1 , x._2 + y._2) )  
 
     // Step 3: Calculate the ave and print out the key value pairs
     val avg = totals.map( x => (x._1, x._2._1/x._2._2 ) ).sortByKey(true)
