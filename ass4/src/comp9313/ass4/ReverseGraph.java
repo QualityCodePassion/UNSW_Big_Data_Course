@@ -23,7 +23,7 @@ import org.apache.htrace.commons.logging.LogFactory;
 
 
 /**
- * This is for assignment 4 of COMP9313 
+ * This is for assignment 4 of COMP9313 - Problem 1
  * 
  * Note that the assignment request that only one file could be used
  * by each version, but I would personally prefer to put each class in its
@@ -37,7 +37,9 @@ import org.apache.htrace.commons.logging.LogFactory;
 
 public class ReverseGraph {
 	
-	/** The "Mapper" class to be used by the MapReduce that 
+	/** The "Mapper" class to be used by the MapReduce that reverses the graph
+	 *  by taking the "ToNodeId" to be the key and the "FromNodeId" as the value 
+	 *  (which is collected by the reducer and is put on the list for the key)
 	 */
 	
 	public static class ReverseMapper extends Mapper<Object, Text, Text, Text> {
@@ -57,8 +59,6 @@ public class ReverseGraph {
 				String node = itr.nextToken().toLowerCase();
 				char c = node.charAt(0);
 				
-				// Ignore lines that have comments
-				//if( c == '#' )
 				if( node.indexOf('#') >= 0)
 				{
 					return;
@@ -84,7 +84,9 @@ public class ReverseGraph {
 	}
 
 	
-	/** The "Reducer" class to be used by the MapReduce that 
+	/** The "Reducer" class to be used by the MapReduce that constructs the
+	 *  "ToNodeId" for each key value (which is now the "FromNodeId", after
+	 *  being swapped by the Mapper)
 	 */
 	
 	public static class ReverseReducer extends Reducer<Text, Text, Text, Text> {
@@ -96,8 +98,6 @@ public class ReverseGraph {
 			
 			String resultString = new String("\t");
 			for (Text val : values) {
-				//sum += val.getFirst();
-				//word_count += val.getSecond();
 				resultString += val.toString() + ",";
 			}
 			
