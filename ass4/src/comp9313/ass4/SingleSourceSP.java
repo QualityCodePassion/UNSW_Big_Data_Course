@@ -265,7 +265,12 @@ public class SingleSourceSP {
 			    
 			    Job job = Job.getInstance(conf, "SingleSourceSP");
 			    job.setJarByClass(SingleSourceSP.class);
-			    job.setNumReduceTasks(1);
+			    
+			    if( writeFinalOutput)
+			    	job.setNumReduceTasks(1);
+			    else
+			    	job.setNumReduceTasks(3);
+			    
 				job.setOutputKeyClass(LongWritable.class);
 				job.setOutputValueClass(Text.class);
 				job.setMapperClass(SPMapper.class);
@@ -285,7 +290,7 @@ public class SingleSourceSP {
 			    {
 			    	// Once we have written the final output, we are done
 			    	isdone = true;
-			    	break;
+			    	//break;
 			    }
 
 			    long convergedCount =  job.getCounters().findCounter(UpdateCounter.CONVERGENCE_COUNTER)
@@ -305,7 +310,8 @@ public class SingleSourceSP {
 			    if( !parsingInputData && ( ( ++iterationCount == nodeCount ) || (nodeCount == convergedCount) ) ){
 			    	//set a flag to say it's the last round and let the mapper write it to required output file
 			    	//writeFinalOutput = true;
-			    	isdone = true;
+			    	//isdone = true;
+			    	writeFinalOutput = true;
 			    	System.out.println("Main function detected convergence with...");
 			    }
 
