@@ -76,6 +76,10 @@ public class SingleSourceSP {
 					boolean updateNeeded = !(sp[1].contains("$"));
 					
 					if(updateNeeded){
+						// THe '$' indicates that the distance value for the given node 
+						// didn't change on the last iteration, so there's no need to
+						// update the distance values of the outgoing edges of that node.
+
 						String[] currentData = sp[1].split("=");
 						double currentDist = Double.parseDouble(currentData[0]);
 						
@@ -145,6 +149,9 @@ public class SingleSourceSP {
 					context.write(key, word);
 				}
 				else{
+					// Count how many nodes were visited
+				    context.getCounter(UpdateCounter.NODE_COUNTER).increment(1);
+
 					String nodes = "";
 					Text word = new Text();
 					double lowest = Double.POSITIVE_INFINITY;
@@ -172,15 +179,17 @@ public class SingleSourceSP {
 						}
 					}
 										
-					// Count how many nodes were visited
-				    context.getCounter(UpdateCounter.NODE_COUNTER).increment(1);
-
 					if( lowest == previousDistance){
-						// Count how many nodes have "converged"
+						// Count how many nodes have "converged" and insert a "$" in front of
+						// the node list to indicate the distance hasn't changed on this
+						// iteration so that it doesn't update any out going node distances
+						// for this node in the next map operation.
 					    context.getCounter(UpdateCounter.CONVERGENCE_COUNTER).increment(1);
 					    
 					    if( (lowest == NA) ||
 					    		( (nodes.length() > 0 ) && (nodes.charAt(0) == '$') ) )
+					    	// Don't insert the '$' if it is already there or if the
+					    	// current lowest isn't a valid values (infinity)
 					    	word.set(lowest + "=" + nodes);
 					    else
 					    	// Insert the '$' to nodes indicating the distance has changed
@@ -244,6 +253,7 @@ public class SingleSourceSP {
 		    boolean writeFinalOutput = false;
 			
 			long iterationCount = 0;
+			long jobErrorCount = 0;
 			boolean isdone = false;
 	
 			while (isdone == false) {
@@ -265,7 +275,11 @@ public class SingleSourceSP {
 			    
         		System.out.println("Main function start job with input dir = " + input + " -> output dir = " + output );
 	
-			    job.waitForCompletion(true);
+			    if( !job.waitForCompletion(true) )
+			    {
+			    	// Count the number of jobs that don't complete successfully
+			    	jobErrorCount++;
+			    }
 			    
 			    if( writeFinalOutput)
 			    {
@@ -296,7 +310,7 @@ public class SingleSourceSP {
 			    }
 
 		    	System.out.println("Main- current iteration count = " + iterationCount + ", nodeCount = " + nodeCount
-		    			+ " and convergedCount = " + convergedCount);
+		    			+ " , convergedCount = " + convergedCount + " , job error count = " + jobErrorCount);
 			    
 			    //input = output;
 			    parsingInputData = false;
@@ -352,7 +366,7 @@ public class SingleSourceSP {
 					String line = readBuffer.readLine();
 					// Read the current output file and put it into HashMap
 					while (line != null) {
-						System.out.println("Reading result line = " + line);
+						//System.out.println("Reading result line = " + line);
 						String[] sp = line.split("\t| |=");
 						long node = Long.parseLong(sp[0]);
 						double distance = Double.parseDouble(sp[1]);
